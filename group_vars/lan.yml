@@ -1,7 +1,7 @@
 vlans:
   - name: Data
     vlan_id: 30
-  - name: WEBINAR
+  - name: Stub
     vlan_id: 4094
 
 sntp_servers:
