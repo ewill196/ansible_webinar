@@ -1,0 +1,10 @@
+ospf_router_id: 1.1.1.1
+l3_interfaces:
+  - name: Vlan 200
+    addr: 172.20.1.95
+    mask: 255.255.255.0
+  - name: loopback1
+    addr: "{{ loopback1 }}"
+    mask: 255.255.255.255
+
+loopback1: "{{ ospf_router_id }}"

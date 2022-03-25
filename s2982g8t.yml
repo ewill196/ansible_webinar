@@ -1,0 +1,64 @@
+---
+- name: Logging
+  ios_config:
+    lines:
+      - logging {{ item.logging_server }} facility {{ item.facility }} level {{ item.logging_level }}
+      - logging executed-commands enable
+  loop: "{{ logging }}"
+  tags:
+    - logging
+  notify: save config
+
+- name: Access ports
+  ios_config:
+    parents:
+      - interface {{ item.ports }}
+    lines:
+      - switchport access vlan 30
+      - rate-violation broadcast {{ rate_violation['bc'] }}
+      - rate-violation multicast {{ rate_violation['mc'] }}
+      - rate-violation control {{ rate_violation['ctrl'] }}
+      - igmp snooping drop query
+  loop: "{{ access_ports }}"
+  tags:
+    - access_ports_acc
+
+- name: Trunk ports
+  ios_config:
+    parents:
+      - interface e1/0/9
+    lines:
+      - ip dhcp snooping trust
+      - switchport mode trunk
+      - switchport trunk allowed vlan 30
+      - switchport trunk native vlan 4094
+  tags:
+    - trunk_ports_acc
+
+- name: DHCP snooping
+  ios_config:
+    lines:
+      - ip dhcp snooping enable
+      - ip dhcp snooping vlan 30
+      - ip dhcp snooping binding enable
+      - ip dhcp snooping information enable
+      - ip dhcp snooping information option subscriber-id format hex
+  tags:
+    - dhcp_snooping
+
+- name: IGMP snooping
+  ios_config:
+    lines:
+      - ip igmp snooping
+      - ip igmp snooping vlan 30
+      - ip igmp snooping vlan 30 limit group 500
+  tags:
+    - igmp_snooping
+
+- name: Isolation
+  ios_config:
+    lines:
+      - isolate-port group {{ isolation_group_name }} switchport interface {{ item.ports }}
+  loop: "{{ access_ports }}"
+  tags:
+    - isolation_acc

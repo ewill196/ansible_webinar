@@ -1,0 +1,56 @@
+---
+- name: Switchport trunk for SNR-S2995G-12FX
+  ios_config:
+    parents:
+      - interface e1/0/1-3
+    lines:
+      - switchport mode hybrid
+      - switchport hybrid allowed vlan {{ policy_map['outer'] }} untag
+      - switchport hybrid allowed vlan 4094 tag
+      - switchport hybrid native vlan 4094
+  tags:
+    - switchport_mode
+
+- name: L3 intefaces SNR-S2995G-12FX
+  ios_config:
+    parents:
+      - interface {{ item.name }}
+    lines:
+      - ip address {{ item.addr }} {{ item.mask }}
+  loop: "{{ l3_interfaces }}"
+  tags:
+    - l3_int
+
+- name: Info-center
+  ios_config:
+    lines:
+      - info-center loghost 8 config {{ item.logging_server }} facility {{ item.facility }}
+      - info-center loghost 8 match level {{ item.logging_level }}
+      - info-center loghost 8 output-enable
+      - info-center loghost 8 record-cmd
+  loop: "{{ logging }}"
+  tags:
+    - logging_95
+
+- name: ACLs
+  ios_config:
+    parents:
+      - ip access-list standard MGMT
+    lines:
+      - permit host-source {{ item.ip_add }} 
+  loop: "{{ securityip }}"
+  tags:
+    - acls
+
+- name: Access to MGMT
+  ios_config:
+    lines:
+      - authentication ip access-class MGMT in
+  tags:
+    - access_mgmt
+
+- name: OSPF Config Test
+  ios_config:
+    src: "templates/ospf.j2"
+  tags:
+    - ospf

@@ -1,0 +1,29 @@
+---
+- name: Create speceific VLANs
+  cisco.ios.ios_vlans:
+    config:
+      - name: "{{ item.name }}"
+        vlan_id: "{{ item.vlan_id }}"
+  loop: "{{ vlans_aggr }}"
+
+- name: Creating class-map
+  ios_config:
+    parents:
+      - class-map {{ class_map['name'] }}
+    lines:
+      - match vlan {{ class_map['inner'] }}
+
+- name: Creating policy-map
+  ios_config:
+    parents:
+      - policy-map {{ policy_map['name'] }}
+      - class {{ class_map['name'] }}
+    lines:
+      - add s-vid {{ policy_map['outer'] }}
+
+- name: Selective QinQ
+  ios_config:
+    parents:
+      - interface e1/0/1-3
+    lines:
+      - service-policy input {{ policy_map['name'] }}

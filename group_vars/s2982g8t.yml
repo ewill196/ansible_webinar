@@ -1,0 +1,15 @@
+access_ports:
+  - ports: Ethernet 1/0/1
+  - ports: Ethernet 1/0/2
+  - ports: Ethernet 1/0/3
+  - ports: Ethernet 1/0/4
+  - ports: Ethernet 1/0/5
+  - ports: Ethernet 1/0/6
+  - ports: Ethernet 1/0/7
+  - ports: Ethernet 1/0/8
+
+rate_violation:
+  bc: 200
+  mc: 200
+  ctrl: block
+

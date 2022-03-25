@@ -1,0 +1,25 @@
+securityip:
+  - ip_add: 192.168.1.3
+  - ip_add: 10.10.2.5
+
+class_map:
+  name: QinQ
+  inner: 30
+
+policy_map:
+  name: QinQ_policy
+  outer: 1000
+
+vlans_aggr:
+  - name: OSPF
+    vlan_id: 200
+  - name: S-VLAN
+    vlan_id: "{{ policy_map['outer'] }}"
+
+
+ospf_proccess: 1 
+ospf_networks:
+  - network: 172.20.1.0 0.0.0.255
+    area: 0
+  - network: "{{ loopback1 }} 0.0.0.0"
+    area: 0

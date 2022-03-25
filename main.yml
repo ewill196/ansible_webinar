@@ -1,0 +1,130 @@
+---
+  - name: Main config
+    hosts: lan
+    gather_facts: no
+    vars_files:
+    - vars.yml
+
+    tasks:
+
+    - name: Common tasks
+      ios_config:
+        lines:
+          - hostname {{ inventory_hostname }}
+          - multi config access
+          - no ip http server
+          - no telnet-server enable
+          - clock timezone EKB add 5
+          - service password-encryption
+          - lldp enable
+
+    - name: Add users
+      no_log: true
+      cisco.ios.ios_user:
+        name: "{{ item.name }}"
+        privilege: "{{ item.priv }}"
+        password_type: password
+        configured_password: "{{ item.pass }}"
+      loop:
+        - { name: 'root', priv: '15', pass: '{{ superuser_pass }}' }
+        - { name: 'operator', priv: '5', pass: '{{ operator_pass }}' }
+      tags: 
+        - add_users
+
+    - name: Set SNTP
+      ios_config:
+        lines:
+          - sntp server {{ item }}
+      loop: "{{ sntp_servers }}"
+      tags: 
+        - set_sntp
+
+    - name: Set SNMP
+      ios_config:
+        lines:
+          - snmp-server enable
+          - snmp-server securityip disable
+          - snmp-server community ro {{ snmp_ro_pass }}
+          - snmp-server community rw {{ snmp_rw_pass }}
+          - snmp-server host {{ snmp_server }} v2c {{ snmp_ro_pass }}
+      tags: 
+        - set_snmp
+
+    - name: VLANs creating
+      cisco.ios.ios_vlans:
+        config:
+        - name: "{{ item.name }}"
+          vlan_id: "{{ item.vlan_id }}"
+      loop: "{{ vlans }}"
+      tags: 
+        - add_vlans
+
+      notify: save config
+
+    handlers:
+      - name: save config
+        ios_command:
+          commands:
+            - command: 'write'
+              prompt: '\[Y/N\]'
+              answer: 'Y'
+
+  - name: Access Config
+    hosts: access
+    gather_facts: no
+    vars_files:
+    - vars.yml
+
+    tasks:
+
+    - name: Tasks for SNR-S2982G-8T
+      import_tasks: s2982g8t.yml
+
+    handlers:
+      - name: save config
+        ios_command:
+          commands:
+            - command: 'write'
+              prompt: '\[Y/N\]'
+              answer: 'Y'
+
+  - name: Aggregation Config
+    hosts: aggr
+    gather_facts: no
+    vars_files:
+    - vars.yml
+
+    roles:
+      - role: qinq
+        tags:
+          - selective_qinq
+
+    tasks:
+
+    - name: Tasks for SNR-S2995G-12FX
+      import_tasks: s2995g12fx.yml
+
+
+    handlers:
+      - name: save config
+        ios_command:
+          commands:
+            - command: 'write'
+              prompt: '\[Y/N\]'
+              answer: 'Y'
+
+  - name: Main config
+    hosts: lan
+    gather_facts: no
+    vars_files:
+    - vars.yml
+    tasks:
+
+    - name: Save the config
+      ios_command:
+        commands:
+        - command: 'write'
+          prompt: '\[Y/N\]'
+          answer: 'Y'
+      tags: 
+        - write

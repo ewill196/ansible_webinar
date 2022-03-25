@@ -1,0 +1,18 @@
+vlans:
+  - name: Data
+    vlan_id: 30
+  - name: TEST
+    vlan_id: 4094
+  - name: webinar
+    vlan_id: 555
+
+sntp_servers:
+  - 192.168.1.10
+  - 192.168.1.11
+
+snmp_server: 192.168.1.12
+
+logging:
+  - logging_server: 192.168.1.13
+    facility: local1
+    logging_level: warnings
